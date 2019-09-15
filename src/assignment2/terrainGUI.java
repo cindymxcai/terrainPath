@@ -14,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.logging.Level;
@@ -40,6 +41,7 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
     ArrayList<Point> path = new ArrayList<Point>();
     Model model = new Model(size, size);
     String chosenDb;
+    
 
     JPanel northArea = new JPanel(new GridLayout(2, 2));
     JPanel northFin = new JPanel(new GridLayout(1,1));
@@ -61,7 +63,7 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
         super();
         super.setPreferredSize(new Dimension(800,800)); 
         this.setLayout(new BorderLayout(size, size));
-        
+        model.addObserver(this);
 
         northArea.add(chooseDb);
         northArea.add(newTerrain);
@@ -84,9 +86,8 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
         this.add(southArea, BorderLayout.SOUTH);
         this.add(eastArea, BorderLayout.EAST);
         
-        
         drawButtons();
-        nextMoves();  
+        model.notifyView();
     }
     
     
@@ -104,18 +105,20 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
             this.remove(terrain);
             terrain = new JPanel(new GridLayout(size, size));
             this.add(terrain, BorderLayout.CENTER);
+            model.addObserver(this);
             System.out.println("buton2 pres");
             model.currentX = -1;
             model.currentY = -1;
             model.score = 0;
+            opPath = new int[size][size];
             path.removeAll(path);
             this.score.setText("Difficulty of this path: " + model.score);
             model.firstMove = true;
             terrain.removeAll();
             drawButtons();
+            model.notifyView();
             this.revalidate();
             this.repaint();
-            nextMoves();
         }
         
         if (button == chooseDb){
@@ -130,15 +133,16 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
                 this.remove(terrain);
                 terrain = new JPanel(new GridLayout(model.ySize, model.xSize));
                 this.add(terrain, BorderLayout.CENTER);
-                
+                model.addObserver(this);
                 model.currentX = -1;
                 model.currentY = -1;
                 model.score = 0;
+                opPath = new int[size][size];
                 this.score.setText("Difficulty of this path: " + model.score);
                 model.firstMove = true;
                 path.removeAll(path);
                 drawButtons();
-                nextMoves();
+                model.notifyView();
                 this.revalidate();
                 this.repaint();
                 terrain.revalidate();;
@@ -191,7 +195,7 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
                         Point point = new Point(model.currentX, model.currentY);
                         path.add(point);
                         this.score.setText("Difficulty of this path: " + model.score);
-                        nextMoves();
+                        model.notifyView();
                         path();
 
                     }
@@ -253,6 +257,7 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
             b[model.currentY][model.currentX].setForeground(Color.ORANGE);
          
         }
+
    }    
     
     private void path()
@@ -370,44 +375,37 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
         int currentCol = lowest;
         int shortest = 0;
         
-        for (int i = 0; i < model.xSize ; i++){
-            b[currentRow][currentCol].setBackground(Color.YELLOW);
-           
+        for (int i = 0; i < model.ySize-1; i++) {
+            b[currentRow][currentCol].setBackground(Color.WHITE);
             shortest = opPath[currentRow + 1][currentCol];
-            
-            if (currentRow != model.ySize ){
-                currentRow++;
-            }
-            
-            if (currentCol != 0 && currentRow != model.ySize-1){
-                
-                 if (shortest > opPath[currentRow + 1][currentCol - 1]) {
-                     
-                    shortest = opPath[currentRow + 1][currentCol - 1];
+           
+            if(currentCol != 0 && currentRow != model.ySize-1){
+                if(shortest > opPath[currentRow + 1][currentCol - 1]){
+                    shortest = opPath[currentRow + 1][currentCol -1];
                     currentCol--;
                 }
             }
-            
-            if (currentCol != model.xSize-1 && currentRow != model.ySize-1) {
-                
-                if (shortest > this.opPath[currentRow + 1][currentCol + 1]) {
-                    
-                    shortest = this.opPath[currentRow + 1][currentCol + 1];
+           
+            if(currentCol != model.xSize-1 && currentRow != model.ySize-1){
+                if(shortest > opPath[currentRow + 1][currentCol + 1]){
+                    shortest = opPath[currentRow + 1][currentCol + 1];
                     currentCol++;
-                    
                 }
             }
-            
-      }
-        
-        b[currentRow][currentCol].setBackground(Color.YELLOW);
-        System.out.println(this.opPath[model.ySize][0]);
+           
+            if(currentRow != model.ySize-1){
+                currentRow++;
+            }
+        }
+        b[currentRow][currentCol].setBackground(Color.white);
+       
     }
 
     @Override
     public void update(Observable o, Object arg) {
         System.out.println("Updated!");
-        
+        nextMoves();
+
     }
     
     

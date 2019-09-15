@@ -15,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Observable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -23,7 +24,7 @@ import javax.swing.JButton;
  *
  * @author Cindy
  */
-public class Model {
+public class Model  extends Observable {
     
     boolean firstMove = true;
     boolean greedyFirstMove = true; 
@@ -91,8 +92,14 @@ public class Model {
             matrix[rs.getInt(2)][rs.getInt(1)] = rs.getInt(3);
         }  
      } 
-        
     
+    
+        
+    public void notifyView()
+    {
+        setChanged();
+        notifyObservers();
+    }
     
     
 }
