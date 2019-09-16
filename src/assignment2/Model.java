@@ -33,9 +33,7 @@ public class Model  extends Observable {
     public int currentX, currentY, xSize, ySize, opCurrentX, opCurrentY;
     private final Random rand = new Random();
     public Database db;
-    public int score;
-    
-    
+    public int score, opScore;
     
     
     public Model(int y, int x)

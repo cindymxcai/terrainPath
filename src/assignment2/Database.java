@@ -53,6 +53,7 @@ public class Database {
             } 
             catch (SQLException ex) 
             {
+                System.out.println("Canceled");
                 Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
                 System.out.println("Error!");
             }
