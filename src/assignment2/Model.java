@@ -27,13 +27,13 @@ import javax.swing.JButton;
 public class Model  extends Observable {
     
     boolean firstMove = true;
-    boolean greedyFirstMove = true; 
+    boolean opFirstMove = true;
     public int[][] matrix;
-    ArrayList<Point> greedyNext = new ArrayList();
     public int currentX, currentY, xSize, ySize, opCurrentX, opCurrentY;
     private final Random rand = new Random();
     public Database db;
     public int score, opScore;
+    
     
     
     public Model(int y, int x)
@@ -91,7 +91,16 @@ public class Model  extends Observable {
         }  
      } 
     
+    public void reset(){ 
+        currentX = -1;
+        currentY = -1;
+        score = 0;
+        opScore = 0;
+        firstMove = true;
+    }
     
+    
+   
         
     public void notifyView()
     {

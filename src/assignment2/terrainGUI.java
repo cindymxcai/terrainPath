@@ -42,6 +42,8 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
     ArrayList<Point> path = new ArrayList<Point>();
     Model model = new Model(size, size);
     String chosenDb;
+    public int firstX = 0; 
+    public int lastX = 0;
     
 
     JPanel northArea = new JPanel(new GridLayout(2, 2));
@@ -110,13 +112,10 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
             this.add(terrain, BorderLayout.CENTER);
             model.addObserver(this);
             System.out.println("buton2 pres");
-            model.currentX = -1;
-            model.currentY = -1;
-            model.score = 0;
             opPath = new int[size][size];
             path.removeAll(path);
             this.score.setText("Difficulty of your path: " + model.score);
-            model.firstMove = true;
+            this.opScore.setText("Optimal Path: " + model.opScore);
             terrain.removeAll();
             drawButtons();
             model.notifyView();
@@ -129,20 +128,15 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
             try {
                 System.out.println("buton pres");
                 chosenDb = (String) JOptionPane.showInputDialog(null, " ", "Choose a DB", JOptionPane.QUESTION_MESSAGE, null, dbTerrains, dbTerrains[0]);              
-                
                 model = new Model(chosenDb);
                 this.remove(terrain);
                 terrain = new JPanel(new GridLayout(model.ySize, model.xSize));
                 this.add(terrain, BorderLayout.CENTER);
                 model.addObserver(this);
-                model.currentX = -1;
-                model.currentY = -1;
-                model.score = 0;
+                model.reset();
                 opPath = new int[model.ySize][model.xSize];
-                System.out.println(model.ySize);
-                System.out.println(model.xSize);
+                this.score.setText("Difficulty of your path: " + model.score);
                 this.opScore.setText("Optimal Path: " + model.opScore);
-                model.firstMove = true;
                 path.removeAll(path);
                 drawButtons();
                 model.notifyView();
@@ -160,9 +154,11 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
         if (button == optimal){
             System.out.println("op pres");
             String chosenLevel = (String) JOptionPane.showInputDialog(null, " ", "Choose a level of Intelligence", JOptionPane.QUESTION_MESSAGE, null, levels, levels[0]);
-
             
-            findOpPath();
+            float chosenValue = Integer.parseInt(chosenLevel)/100.0f;
+            System.out.println("level: " + chosenValue);
+            
+            findOpPath(chosenValue);
             for(int i = 0; i < model.ySize; i ++)
             {
                 for(int j = 0; j < model.xSize; j ++)
@@ -244,11 +240,8 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
             {
                 b[model.ySize -1][i].setEnabled(true);
                 b[model.ySize -1][i].setForeground(Color.GREEN);
-                
             }
-            
             model.firstMove = false;
-            
         }
         
         if(x != -1 && y != -1)
@@ -270,10 +263,7 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
             
             b[y][x].setEnabled(true);
             b[y][x].removeActionListener(this);
-            
-            
             b[y][x].setForeground(Color.ORANGE);
-
 
         }
     }
@@ -291,9 +281,6 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
                 b[i][j] = new JButton(String.valueOf(n));
                 b[i][j].addActionListener(this);
                 b[i][j].setEnabled(false);
-                
-               // UIManager.getDefaults().put("Button.disabledText", Color.WHITE);
-                
 
                 if(n < 0){
                     b[i][j].setBackground(new Color (215, 192, 242)); 
@@ -314,32 +301,57 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
         }
     }
     
+    /////////////////////////////////////////////////////////
     
-    public void findOpPath(){
-        
-        for (int i = 0; i < model.xSize; i++){
+     public void findOpPath(float level){
+         
+        if (level == 1.0f){
             
-            opPath[model.ySize-1][i] = Integer.parseInt(b[model.ySize-1][i].getText());
-        }      
-        for (int i = model.ySize-2; i >= 0; i--){
-            
-            for (int j = 0; j < model.xSize; j++){
-                int minPrev = opPath [i + 1][j]; //one row down, same column
-                if (j != 0){
-                   if (minPrev > opPath[i+1][j-1]){
-                        minPrev = opPath[i+1][j-1];
+            for (int i = 0; i < model.xSize; i++){
+
+                opPath[model.ySize-1][i] = Integer.parseInt(b[model.ySize-1][i].getText());
+            }      
+            for (int i = model.ySize-2; i >= 0; i--){
+
+                for (int j = 0; j < model.xSize; j++){
+                    int minPrev = opPath [i + 1][j]; //one row down, same column
+                    if (j != 0){
+                       if (minPrev > opPath[i+1][j-1]){
+                            minPrev = opPath[i+1][j-1];
+                        }
                     }
+
+                    if( j != model.xSize -1){
+                        if (minPrev > opPath[i+1][j+1]){
+                            minPrev = opPath[i+1][j+1];
+                        }
+                    }
+                    opPath[i][j] = Integer.parseInt(b[i][j].getText()) + minPrev; //dynamic programming!!!
+                }
+            }  
+
+        }
+        else { 
+            boolean run = true; 
+            int possibleRows = (int)(model.ySize * level);
+            int remainingR = 0;
+            int current = model.ySize -1; 
+            
+            while (run){
+                if (model.opFirstMove){
+                    remainingR = model.ySize;
+                    model.opCurrentX = model.xSize;
+                    model.opCurrentY = model.ySize;
+                }
+                else {
+                    remainingR = model.opCurrentY;
                 }
                 
-                if( j != model.xSize -1){
-                    if (minPrev > opPath[i+1][j+1]){
-                        minPrev = opPath[i+1][j+1];
-                    }
-                }
-                opPath[i][j] = Integer.parseInt(b[i][j].getText()) + minPrev; //dynamic programming!!!
+                int i = Math.min(possibleRows, remainingR);
+                
             }
-        }  
-        
+            
+        }
     }
     
     public void findLowest(){
@@ -384,14 +396,64 @@ public class terrainGUI extends JPanel implements ActionListener, Observer
                     shortest = opPath[i + 1][temp + 1];
                     currentCol = temp + 1;
                 }
+                
             }
             b[i+1][currentCol].setBackground(Color.WHITE);
-            model.opScore += Integer.valueOf(b[i+1][currentCol].getText());
-
+            model.opScore += Integer.valueOf(b[i+1][currentCol].getText()) ;                 
         }
-            this.opScore.setText("Optimal path: " + model.opScore);
-
+        model.opScore += Integer.valueOf(b[0][currentCol].getText()) ;
+         this.opScore.setText("Optimal path: " + model.opScore);
     }
+    
+    private int[][] subTable(int height)
+    { 
+        int [][] subTable = new int[height][model.xSize];
+        int row = Math.abs(model.opCurrentY - height);
+        
+        for(int i = 0 ; i < height; i++)
+        {
+            for(int j = 0 ; j < model.xSize; j++){
+                subTable [i][j] = model.matrix[row][j];
+            }
+            row++;
+        }
+        return subTable;
+    }
+    
+    public int[][] levelNext(int[][] subTable, int height){
+        
+        int[][] quads = new int[height][model.xSize];
+        
+        for(int i = 0; i < height; i++)
+        {
+            for(int j = 0; j < model.xSize; j++)
+            {
+                quads[i][j] = subTable[i][j];
+            }
+        }
+        
+        if(model.opFirstMove){
+            firstX = 0;
+            lastX = model.xSize - 1;
+        }
+        else { 
+            
+            firstX = model.opCurrentX - 1;
+            lastX = model.currentX + 1;
+
+            if(firstX < 0){
+                firstX = 0;
+            }
+            if(lastX >= model.xSize){
+                lastX = model.xSize - 1;
+            }
+        }
+        
+        
+        ///////////////////////////YOU ARE HERE/////////////////////////////////////////////////
+     
+    }
+    
        
     @Override
     public void update(Observable o, Object arg) {
